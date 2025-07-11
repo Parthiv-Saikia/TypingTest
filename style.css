@@ -144,3 +144,10 @@ h1 svg{
     opacity: 0;
   }
 }
+.ghost-error {
+  color: red;
+  opacity: 0.4;
+  margin-left: 1px;
+  font-weight: bold;
+  transition: opacity 0.3s ease;
+}

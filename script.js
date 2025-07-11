@@ -203,24 +203,73 @@ document.getElementById('game').addEventListener('keydown', (ev) => {
     const currentChar = spans[currentIndex].textContent;
     const typedChar = ev.key;
 
-    if (typedChar.length !== 1) return;
+    if (typedChar.length !== 1) return; // Ignore non-character keys
 
-    // Compare typed vs actual character
+    // ✅ CASE 1: Expected character is SPACE
+    if (currentChar === ' ') {
+        if (typedChar === ' ') {
+            spans[currentIndex].classList.add('correct');
+
+            const prevSpan = spans[currentIndex - 1];
+            const word = prevSpan?.closest('.word');
+
+            if (word) {
+                const ghosts = Array.from(word.querySelectorAll('.ghost-error'));
+
+                if (ghosts.length > 0) {
+                    // 🧼 Fade-out ghost errors first
+                    ghosts.forEach(el => el.style.opacity = 0);
+
+                    setTimeout(() => {
+                        ghosts.forEach(el => el.remove());
+                        currentIndex++;
+                        updateCursorPosition();
+                        updateWordHighlight();
+                    }, 100);
+                } else {
+                    // 🚀 No ghosts — move instantly
+                    currentIndex++;
+                    updateCursorPosition();
+                    updateWordHighlight();
+                }
+            } else {
+                // 🚀 No previous word (edge case), just move on
+                currentIndex++;
+                updateCursorPosition();
+                updateWordHighlight();
+            }
+        } else {
+            // Wrong key typed instead of space — show ghost
+            const prevSpan = spans[currentIndex - 1];
+            const word = prevSpan?.closest('.word');
+            if (word) {
+                const ghost = document.createElement('span');
+                ghost.textContent = typedChar;
+                ghost.classList.add('ghost-error');
+                word.appendChild(ghost);
+            }
+            return;
+        }
+
+        return;
+    }
+
+    // ✅ CASE 2: Normal character expected
     if (typedChar === currentChar) {
         spans[currentIndex].classList.add('correct');
     } else {
         spans[currentIndex].classList.add('incorrect');
     }
 
-    // ✅ Now increment the index
     currentIndex++;
-
-    // ✅ Then update visual state AFTER index change
-    // This will position cursor on the next char to type
     updateCursorPosition();
-    console.log('Cursor now pointing to index:', currentIndex);
     updateWordHighlight();
 });
+
+
+
+
+
 
 // window.characters.forEach((c, i) => console.log(`[${i}]: "${c.textContent}"`));
 
