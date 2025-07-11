@@ -112,6 +112,9 @@ function newGame() {
     container.appendChild(span);
   });
 
+  
+
+
   currentIndex = 0;
   updateCursorPosition();
 }
@@ -139,6 +142,10 @@ document.getElementById('game').addEventListener('keydown', (ev) => {
   if (ev.key.length !== 1 || currentIndex >= spans.length) return;
 
   const currentChar = spans[currentIndex].textContent;
+  
+
+  console.log('Actual: ' + currentChar + ', Typed: ' + ev.key);
+
 
   if (ev.key === currentChar) {
     spans[currentIndex].classList.add('correct');
