@@ -91,8 +91,8 @@ let wordsArray = wordString.trim().split(/\s+/);
 
 
 for (let i = wordsArray.length - 1; i > 0; i--) {
-  const j = Math.floor(Math.random() * (i + 1));
-  [wordsArray[i], wordsArray[j]] = [wordsArray[j], wordsArray[i]];
+    const j = Math.floor(Math.random() * (i + 1));
+    [wordsArray[i], wordsArray[j]] = [wordsArray[j], wordsArray[i]];
 }
 
 const startIndex = Math.floor(Math.random() * 960);
@@ -102,61 +102,131 @@ const characters = gameText.split('');
 let currentIndex = 0;
 
 function newGame() {
-  const container = document.getElementById('words');
-  container.innerHTML = '';
+    const container = document.getElementById('words');
+    container.innerHTML = '';
+    let wordSpans = [];
 
-  characters.forEach((char) => {
-    const span = document.createElement('span');
-    span.textContent = char;
-    span.classList.add('letter');
-    container.appendChild(span);
-  });
+    const gameWords = wordsArray
+        .slice(startIndex, startIndex + 40)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
 
-  
+    const characters = gameWords.split('');
+    let word = [];
+
+    characters.forEach((char) => {
+        const span = document.createElement('span');
+        span.textContent = char;
+        span.classList.add('letter');
+
+        if (char === ' ') {
+            // Add previous word to container
+            const wordContainer = document.createElement('span');
+            wordContainer.classList.add('word');
+            word.forEach(s => wordContainer.appendChild(s));
+            container.appendChild(wordContainer);
+            wordSpans.push(wordContainer);
+
+            // Add space separately
+            container.appendChild(span);
+            word = [];
+        } else {
+            word.push(span);
+        }
+    });
+
+    // Append the last word
+    if (word.length > 0) {
+        const wordContainer = document.createElement('span');
+        wordContainer.classList.add('word');
+        word.forEach(s => wordContainer.appendChild(s));
+        container.appendChild(wordContainer);
+        wordSpans.push(wordContainer);
+    }
+
+    // Set characters array and reset index globally
+    window.characters = container.querySelectorAll('span.letter');
+    currentIndex = 0;
+    updateCursorPosition();
+    updateWordHighlight();
+}
 
 
-  currentIndex = 0;
-  updateCursorPosition();
+function updateWordHighlight() {
+    const allWords = document.querySelectorAll('#words .word');
+    allWords.forEach(w => {
+        w.classList.remove('current');
+        w.classList.remove('next');
+    });
+
+    const spans = document.querySelectorAll('#words span.letter');
+
+    if (currentIndex < spans.length) {
+        let currentSpan = spans[currentIndex];
+        let currentWord = currentSpan.closest('.word');
+
+        if (currentWord) {
+            currentWord.classList.add('current');
+            let nextWord = currentWord.nextElementSibling;
+            if (nextWord && nextWord.classList.contains('word')) {
+                nextWord.classList.add('next');
+            }
+        }
+    }
 }
 
 function updateCursorPosition() {
-  const spans = document.querySelectorAll('#words span');
-  const cursor = document.getElementById('cursor');
+    const spans = window.characters;
+    const cursor = document.getElementById('cursor');
 
-  if (currentIndex < spans.length) {
-    const charSpan = spans[currentIndex];
-    const charRect = charSpan.getBoundingClientRect();
-    const containerRect = document.getElementById('game').getBoundingClientRect();
+    if (currentIndex < spans.length) {
+        const charSpan = spans[currentIndex];
+        const charRect = charSpan.getBoundingClientRect();
+        const containerRect = document.getElementById('game').getBoundingClientRect();
 
-    cursor.style.left = `${charRect.left - containerRect.left}px`;
-    cursor.style.top = `${charRect.top - containerRect.top}px`;
-    cursor.style.display = 'block';
-  } else {
-    document.getElementById('cursor').style.display = 'none';
-  }
+        // ✅ Place cursor slightly to the left of the current char
+        cursor.style.left = `${charRect.left - containerRect.left}px`;
+        cursor.style.top = `${charRect.top - containerRect.top}px`;
+        cursor.style.display = 'block';
+    } else {
+        cursor.style.display = 'none';
+    }
 }
 
+
 document.getElementById('game').addEventListener('keydown', (ev) => {
-  const spans = document.querySelectorAll('#words span');
+    const spans = window.characters;
 
-  if (ev.key.length !== 1 || currentIndex >= spans.length) return;
+    if (currentIndex >= spans.length) return;
 
-  const currentChar = spans[currentIndex].textContent;
-  
+    const currentChar = spans[currentIndex].textContent;
+    const typedChar = ev.key;
 
-  console.log('Actual: ' + currentChar + ', Typed: ' + ev.key);
+    if (typedChar.length !== 1) return;
 
+    // Compare typed vs actual character
+    if (typedChar === currentChar) {
+        spans[currentIndex].classList.add('correct');
+    } else {
+        spans[currentIndex].classList.add('incorrect');
+    }
 
-  if (ev.key === currentChar) {
-    spans[currentIndex].classList.add('correct');
-  } else {
-    spans[currentIndex].classList.add('incorrect');
-  }
+    // ✅ Now increment the index
+    currentIndex++;
 
-  currentIndex++;
-  updateCursorPosition();
+    // ✅ Then update visual state AFTER index change
+    // This will position cursor on the next char to type
+    updateCursorPosition();
+    console.log('Cursor now pointing to index:', currentIndex);
+    updateWordHighlight();
 });
+
+// window.characters.forEach((c, i) => console.log(`[${i}]: "${c.textContent}"`));
+
 
 // Autofocus so blur is removed and cursor appears
 document.getElementById('game').focus();
+window.characters = document.querySelectorAll('span.letter');
+
 newGame();
