@@ -197,6 +197,30 @@ function updateCursorPosition() {
 
 document.getElementById('game').addEventListener('keydown', (ev) => {
     const spans = window.characters;
+    console.log(ev.key);
+    if (ev.key === 'Backspace') {
+        if (currentIndex === 0) return;
+
+        const prevIndex = currentIndex - 1;
+        const prevChar = spans[prevIndex];
+        const word = prevChar.closest('.word');
+
+        if (word) {
+            const ghosts = Array.from(word.querySelectorAll('.ghost-error'));
+            if (ghosts.length > 0) {
+                // Remove the last ghost error
+                ghosts[ghosts.length - 1].remove();
+                return;
+            }
+        }
+
+        // Remove the previous character's correctness
+        prevChar.classList.remove('correct', 'incorrect');
+        currentIndex--;
+        updateCursorPosition();
+        updateWordHighlight();
+        return;
+    }
 
     if (currentIndex >= spans.length) return;
 
@@ -205,7 +229,6 @@ document.getElementById('game').addEventListener('keydown', (ev) => {
 
     if (typedChar.length !== 1) return; // Ignore non-character keys
 
-    // ✅ CASE 1: Expected character is SPACE
     if (currentChar === ' ') {
         if (typedChar === ' ') {
             spans[currentIndex].classList.add('correct');
@@ -217,9 +240,7 @@ document.getElementById('game').addEventListener('keydown', (ev) => {
                 const ghosts = Array.from(word.querySelectorAll('.ghost-error'));
 
                 if (ghosts.length > 0) {
-                    // 🧼 Fade-out ghost errors first
                     ghosts.forEach(el => el.style.opacity = 0);
-
                     setTimeout(() => {
                         ghosts.forEach(el => el.remove());
                         currentIndex++;
@@ -227,19 +248,16 @@ document.getElementById('game').addEventListener('keydown', (ev) => {
                         updateWordHighlight();
                     }, 100);
                 } else {
-                    // 🚀 No ghosts — move instantly
                     currentIndex++;
                     updateCursorPosition();
                     updateWordHighlight();
                 }
             } else {
-                // 🚀 No previous word (edge case), just move on
                 currentIndex++;
                 updateCursorPosition();
                 updateWordHighlight();
             }
         } else {
-            // Wrong key typed instead of space — show ghost
             const prevSpan = spans[currentIndex - 1];
             const word = prevSpan?.closest('.word');
             if (word) {
@@ -248,13 +266,10 @@ document.getElementById('game').addEventListener('keydown', (ev) => {
                 ghost.classList.add('ghost-error');
                 word.appendChild(ghost);
             }
-            return;
         }
-
         return;
     }
 
-    // ✅ CASE 2: Normal character expected
     if (typedChar === currentChar) {
         spans[currentIndex].classList.add('correct');
     } else {
@@ -265,6 +280,7 @@ document.getElementById('game').addEventListener('keydown', (ev) => {
     updateCursorPosition();
     updateWordHighlight();
 });
+
 
 
 
