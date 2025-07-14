@@ -7,8 +7,7 @@ Type fast. Type accurately. Escape the Mosquito.
 
 ## 🚀 Demo
 
-[🔗 Play Live on GitHub Pages](https://your-username.github.io/MosquitoType/)  
-_(Replace this link with your actual GitHub Pages link if hosted)_
+https://parthiv-saikia.github.io/TypingTest/
 
 ---
 
