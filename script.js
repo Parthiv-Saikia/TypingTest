@@ -100,6 +100,7 @@ const endIndex = startIndex + 40;
 const gameText = wordsArray.slice(startIndex, endIndex).join(' ');
 const characters = gameText.split('');
 let currentIndex = 0;
+let marginShift = 0;
 
 function newGame() {
     const container = document.getElementById('words');
@@ -185,14 +186,27 @@ function updateCursorPosition() {
         const charRect = charSpan.getBoundingClientRect();
         const containerRect = document.getElementById('game').getBoundingClientRect();
 
-        // ✅ Place cursor slightly to the left of the current char
         cursor.style.left = `${charRect.left - containerRect.left}px`;
         cursor.style.top = `${charRect.top - containerRect.top}px`;
         cursor.style.display = 'block';
+
+        // 🟡 Add this block to shift margin when jumping to next line
+        const thisChar = spans[currentIndex - 1];
+        const nextChar = spans[currentIndex];
+        if (
+            thisChar &&
+            nextChar &&
+            nextChar.getBoundingClientRect().top > thisChar.getBoundingClientRect().top
+        ) {
+            marginShift -= 35; // Adjust based on your line height
+            document.getElementById('words').style.marginTop = marginShift + 'px';
+        }
+
     } else {
         cursor.style.display = 'none';
     }
 }
+
 
 
 document.getElementById('game').addEventListener('keydown', (ev) => {
@@ -275,6 +289,7 @@ document.getElementById('game').addEventListener('keydown', (ev) => {
     } else {
         spans[currentIndex].classList.add('incorrect');
     }
+    
 
     currentIndex++;
     updateCursorPosition();
