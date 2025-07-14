@@ -180,32 +180,33 @@ function updateWordHighlight() {
 function updateCursorPosition() {
     const spans = window.characters;
     const cursor = document.getElementById('cursor');
+    const game = document.getElementById('game');
+    const wordsContainer = document.getElementById('words');
 
     if (currentIndex < spans.length) {
         const charSpan = spans[currentIndex];
         const charRect = charSpan.getBoundingClientRect();
-        const containerRect = document.getElementById('game').getBoundingClientRect();
+        const containerRect = game.getBoundingClientRect();
 
         cursor.style.left = `${charRect.left - containerRect.left}px`;
         cursor.style.top = `${charRect.top - containerRect.top}px`;
         cursor.style.display = 'block';
 
-        // 🟡 Add this block to shift margin when jumping to next line
-        const thisChar = spans[currentIndex - 1];
-        const nextChar = spans[currentIndex];
-        if (
-            thisChar &&
-            nextChar &&
-            nextChar.getBoundingClientRect().top > thisChar.getBoundingClientRect().top
-        ) {
-            marginShift -= 35; // Adjust based on your line height
-            document.getElementById('words').style.marginTop = marginShift + 'px';
-        }
+        // 🟡 New logic: Check if the cursor's Y is outside the visible area
+        const bottomVisible = containerRect.bottom;
+        const topVisible = containerRect.top;
 
+        const buffer = 10; // Small buffer in px
+        if (charRect.top > bottomVisible - buffer) {
+            marginShift -= 35; // You can make this dynamic if needed
+            wordsContainer.style.marginTop = `${marginShift}px`;
+        }
     } else {
         cursor.style.display = 'none';
     }
 }
+
+
 
 
 
