@@ -95,17 +95,23 @@ for (let i = wordsArray.length - 1; i > 0; i--) {
     [wordsArray[i], wordsArray[j]] = [wordsArray[j], wordsArray[i]];
 }
 
-const startIndex = Math.floor(Math.random() * 960);
-const endIndex = startIndex + 40;
+const startIndex = Math.floor(Math.random() * 800);
+const endIndex = startIndex + 200;
 const gameText = wordsArray.slice(startIndex, endIndex).join(' ');
 const characters = gameText.split('');
 let currentIndex = 0;
 let marginShift = 0;
+const gameTime = 30 * 1000;
+window.timer = null;
+window.gameStart = null;
+let gameIsOver = false;
 
 function newGame() {
+    gameIsOver = false;
     const container = document.getElementById('words');
     container.innerHTML = '';
     let wordSpans = [];
+    document.getElementById('info').innerHTML=(gameTime/1000)+'';
 
     const gameWords = wordsArray
         .slice(startIndex, startIndex + 40)
@@ -151,7 +157,40 @@ function newGame() {
     currentIndex = 0;
     updateCursorPosition();
     updateWordHighlight();
+    window.timer = null;
 }
+
+
+function getWpm() {
+    const words = [...document.querySelectorAll('.word')];
+    const lastTypedWord = document.querySelector('.word.current');
+    const indexofLastTypedWords = words.indexOf(lastTypedWord);
+    const typeWords=words.slice(0,indexofLastTypedWords);
+
+    const correctWords=typeWords.filter(word=>{
+        const letters=[...word.children];
+        const incorrectLetters=letters.filter(letter=>letter.className.includes('incorrect'));
+        const correctLetters=letters.filter(letter=>letter.className.includes('correct'));
+
+        return incorrectLetters.length===0 && correctLetters.length==letters.length;
+    });
+    return correctWords.length/gameTime*60000;
+}
+
+function gameOver() {
+    clearInterval(window.timer);
+    gameIsOver = true;
+
+    const gameEl = document.getElementById('game');
+    gameEl.classList.add('over');
+
+    document.getElementById('info').innerHTML = 'WPM: ' + getWpm();
+    alert(getWPM());
+    
+
+
+}
+
 
 
 function updateWordHighlight() {
@@ -211,8 +250,47 @@ function updateCursorPosition() {
 
 
 document.getElementById('game').addEventListener('keydown', (ev) => {
+     if (gameIsOver) return;
     const spans = window.characters;
     console.log(ev.key);
+    const isLetter = ev.key.length === 1 && ev.key !== ' ';
+
+    if (document.querySelector('#game.over')) {
+        gameOver();
+        return;
+    }
+
+
+    if (!window.timer && isLetter) {
+        if (!window.gameStart) {
+            window.gameStart = Date.now();
+        }
+
+        // Call timer logic once immediately
+        const updateTimer = () => {
+            const currentTime = Date.now();
+            const millisecondPassed = currentTime - window.gameStart;
+            const secondPassed = Math.floor(millisecondPassed / 1000);
+            const secondsLeft = Math.max(0, (gameTime / 1000) - secondPassed);
+            if (secondsLeft == 0) {
+                gameOver();
+            }
+            document.getElementById('info').innerHTML = secondsLeft + '';
+        };
+
+        updateTimer(); //  Immediately update
+        window.timer = setInterval(updateTimer, 1000);
+    }
+
+
+
+
+
+
+
+
+
+
     if (ev.key === 'Backspace') {
         if (currentIndex === 0) return;
 
@@ -290,7 +368,7 @@ document.getElementById('game').addEventListener('keydown', (ev) => {
     } else {
         spans[currentIndex].classList.add('incorrect');
     }
-    
+
 
     currentIndex++;
     updateCursorPosition();
@@ -307,7 +385,18 @@ document.getElementById('game').addEventListener('keydown', (ev) => {
 
 
 // Autofocus so blur is removed and cursor appears
-document.getElementById('game').focus();
+// document.getElementById('game').focus();
 window.characters = document.querySelectorAll('span.letter');
 
+
+
+document.querySelector('.button-29').addEventListener('click',()=>{
+    clearInterval(window.timer);
+    window.timer = null;
+    window.gameStart = null;
+    gameIsOver = false;
+    document.getElementById('game').classList.remove('over');
+    newGame();
+    document.getElementById('game').focus(); // Re-focus to enable typing
+});
 newGame();
